@@ -1,0 +1,17 @@
+{
+"model_file": "model_mp",
+"model_tag": "letor07_mp_fold1",
+"data_dir": "./data/",
+"fold": 1,
+"batch_size": 64,
+"data1_maxlen": 20,
+"data2_maxlen": 500,
+"embed_size": 50,
+"reverse_doc": false,
+"train_iters": 2500,
+
+"data1_psize": 3,
+"data2_psize": 10,
+
+"log_file": "log/letor07_mp_fold1.log"
+}
