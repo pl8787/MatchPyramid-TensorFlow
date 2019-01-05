@@ -1,1 +1,1 @@
-import base
+from . import base

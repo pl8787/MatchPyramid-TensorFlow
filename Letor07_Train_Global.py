@@ -35,7 +35,7 @@ import random
 def eval_MAP(pred, gt):
     map_value = 0.0
     r = 0.0
-    c = zip(pred, gt)
+    c = list(zip(pred, gt))
     random.shuffle(c)
     c = sorted(c, key = lambda x:x[0], reverse=True)
     for j, (p, g) in enumerate(c):
@@ -53,14 +53,15 @@ for i in range(config['train_iters']):
     feed_dict={ model.X1: X1, model.X1_len: X1_len, model.X2: X2, 
                 model.X2_len: X2_len, model.Y: Y, model.F: F}
     loss = model.train_step(sess, feed_dict)
-    print >>flog, '[Train:%s]'%i, loss
-    print '[Train:%s]'%i, loss
+    print('[Train:%s]'%i, loss, file=flog)
+    print('\r[Train:%s]'%i, loss, end='')
     flog.flush()
     
     if i == 0:
         model.saver.save(sess, 'checkpoint/%s.ckpt'%(config['model_tag']), global_step=i)
         
     if (i+1) % 200 == 0:
+        print('')
         model.saver.save(sess, 'checkpoint/%s.ckpt'%(config['model_tag']), global_step=i)
         list_gen = du.ListGenerator(rel_file=Letor07Path + '/relation.test.fold%d.txt'%(config['fold']), config=config)
         map_v = 0.0
@@ -72,11 +73,9 @@ for i in range(config['train_iters']):
             map_o = eval_MAP(pred, Y)
             map_v += map_o
             map_c += 1.0
-            #print '[Test:%s]'%int(map_c), map_o
         map_v /= map_c
 
-        print >>flog, '[Test:%s]'%i, map_v
-        print '[Test:%s]'%i, map_v
+        print('[Test:%s]'%i, map_v, file=flog)
+        print('[Test:%s]'%i, map_v)
         flog.flush()
 flog.close()
-
