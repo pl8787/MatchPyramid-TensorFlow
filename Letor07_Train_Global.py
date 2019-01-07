@@ -5,7 +5,7 @@ usage:
     python Letor07_Train_Global.py [config_file]
 """
 
-__version__ = '0.1'
+__version__ = '0.2'
 __author__ = 'Liang Pang'
 
 import sys
@@ -28,14 +28,16 @@ mo = import_module(config['model_file'])
 model = mo.Model(config)
 
 import tensorflow as tf
-sess = tf.Session()
+sess_config = tf.ConfigProto()
+sess_config.gpu_options.allow_growth = True
+sess = tf.Session(config=sess_config)
 model.init_step(sess)
 
 import random
 def eval_MAP(pred, gt):
     map_value = 0.0
     r = 0.0
-    c = zip(pred, gt)
+    c = list(zip(pred, gt))
     random.shuffle(c)
     c = sorted(c, key = lambda x:x[0], reverse=True)
     for j, (p, g) in enumerate(c):
@@ -48,20 +50,22 @@ def eval_MAP(pred, gt):
         return map_value/r
 
 flog = open(config['log_file'], 'w')
+model.saver.export_meta_graph('checkpoint/%s.meta'%(config['model_tag']))
 for i in range(config['train_iters']):
     X1, X1_len, X2, X2_len, Y, F = pair_gen.get_batch(data1=du.query_data, data2=du.doc_data)
     feed_dict={ model.X1: X1, model.X1_len: X1_len, model.X2: X2, 
                 model.X2_len: X2_len, model.Y: Y, model.F: F}
     loss = model.train_step(sess, feed_dict)
-    print >>flog, '[Train:%s]'%i, loss
-    print '[Train:%s]'%i, loss
+    print('[Train:%s]'%i, loss, file=flog)
+    print('\r[Train:%s]'%i, loss, end='')
     flog.flush()
     
     if i == 0:
         model.saver.save(sess, 'checkpoint/%s.ckpt'%(config['model_tag']), global_step=i)
         
     if (i+1) % 200 == 0:
-        model.saver.save(sess, 'checkpoint/%s.ckpt'%(config['model_tag']), global_step=i)
+        print('')
+        model.saver.save(sess, 'checkpoint/%s.ckpt'%(config['model_tag']), global_step=i, write_meta_graph=False)
         list_gen = du.ListGenerator(rel_file=Letor07Path + '/relation.test.fold%d.txt'%(config['fold']), config=config)
         map_v = 0.0
         map_c = 0.0
@@ -72,11 +76,9 @@ for i in range(config['train_iters']):
             map_o = eval_MAP(pred, Y)
             map_v += map_o
             map_c += 1.0
-            #print '[Test:%s]'%int(map_c), map_o
         map_v /= map_c
 
-        print >>flog, '[Test:%s]'%i, map_v
-        print '[Test:%s]'%i, map_v
+        print('[Test:%s]'%i, map_v, file=flog)
+        print('[Test:%s]'%i, map_v)
         flog.flush()
 flog.close()
-

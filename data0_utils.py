@@ -3,7 +3,7 @@
 This module is used to read data from letor dataset.
 """
 
-__version__ = '0.1'
+__version__ = '0.2'
 __author__ = 'Liang Pang'
 
 import sys
@@ -52,7 +52,7 @@ class PairGenerator():
                     for high_d2 in rel_set[d1][high_label]:
                         for low_d2 in rel_set[d1][low_label]:
                             pair_list.append( (d1, high_d2, low_d2) )
-        print 'Pair Instance Count:', len(pair_list)
+        print('Pair Instance Count:', len(pair_list))
         return pair_list
         
     def get_batch(self, data1, data2):
@@ -95,7 +95,7 @@ class ListGenerator():
             list_list[d1].append( (label, d2) )
         for d1 in list_list:
             list_list[d1] = sorted(list_list[d1], reverse = True)
-        print 'List Instance Count:', len(list_list)
+        print('List Instance Count:', len(list_list))
         return list_list.items()
 
     def get_batch(self, data1, data2):
