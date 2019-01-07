@@ -88,7 +88,7 @@ class Model():
                         [1, stride1, stride2, 1], "VALID")
 
         with tf.variable_scope('fc1'):
-            self.fc1 = tf.nn.relu(tf.contrib.layers.linear(tf.reshape(self.pool1, [self.batch_size, config['data1_psize'] * config['data2_psize'] * 8]), 20))
+            self.fc1 = tf.nn.relu(tf.contrib.layers.linear(tf.reshape(self.pool1, [-1, config['data1_psize'] * config['data2_psize'] * 8]), 20))
 
         self.pred = tf.contrib.layers.linear(self.fc1, 1)
         tf.add_to_collection('explain_output', self.pred)

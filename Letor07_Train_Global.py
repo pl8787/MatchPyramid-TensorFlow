@@ -28,7 +28,9 @@ mo = import_module(config['model_file'])
 model = mo.Model(config)
 
 import tensorflow as tf
-sess = tf.Session()
+sess_config = tf.ConfigProto()
+sess_config.gpu_options.allow_growth = True
+sess = tf.Session(config=sess_config)
 model.init_step(sess)
 
 import random
@@ -48,6 +50,7 @@ def eval_MAP(pred, gt):
         return map_value/r
 
 flog = open(config['log_file'], 'w')
+model.saver.export_meta_graph('checkpoint/%s.meta'%(config['model_tag']))
 for i in range(config['train_iters']):
     X1, X1_len, X2, X2_len, Y, F = pair_gen.get_batch(data1=du.query_data, data2=du.doc_data)
     feed_dict={ model.X1: X1, model.X1_len: X1_len, model.X2: X2, 
@@ -62,7 +65,7 @@ for i in range(config['train_iters']):
         
     if (i+1) % 200 == 0:
         print('')
-        model.saver.save(sess, 'checkpoint/%s.ckpt'%(config['model_tag']), global_step=i)
+        model.saver.save(sess, 'checkpoint/%s.ckpt'%(config['model_tag']), global_step=i, write_meta_graph=False)
         list_gen = du.ListGenerator(rel_file=Letor07Path + '/relation.test.fold%d.txt'%(config['fold']), config=config)
         map_v = 0.0
         map_c = 0.0
