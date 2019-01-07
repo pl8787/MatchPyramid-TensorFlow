@@ -3,7 +3,7 @@
 This module is used to construct the MatchPyramid described in paper https://arxiv.org/abs/1602.06359.
 """
 
-__version__ = '0.1'
+__version__ = '0.2'
 __author__ = 'Liang Pang'
 
 import sys

@@ -5,7 +5,7 @@ usage:
     python Letor07_Train_Global.py [config_file]
 """
 
-__version__ = '0.1'
+__version__ = '0.2'
 __author__ = 'Liang Pang'
 
 import sys

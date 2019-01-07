@@ -3,7 +3,7 @@
 This module is used to read data from letor dataset.
 """
 
-__version__ = '0.1'
+__version__ = '0.2'
 __author__ = 'Liang Pang'
 
 import sys
