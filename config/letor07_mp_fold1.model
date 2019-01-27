@@ -9,6 +9,7 @@
 "embed_size": 50,
 "reverse_doc": false,
 "train_iters": 2500,
+"feat_size": 0,
 
 "data1_psize": 3,
 "data2_psize": 10,

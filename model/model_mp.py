@@ -51,11 +51,13 @@ class Model():
         tf.add_to_collection('explain_input', self.embed2)
 
         # batch_size * X1_maxlen * X2_maxlen
-        self.cross = tf.einsum('abd,acd->abc', self.embed1, self.embed2)
-        self.cross_img = tf.expand_dims(self.cross, 3)
-        tf.add_to_collection('explain_input', self.cross)
+        #self.cross = tf.einsum('abd,acd->abc', self.embed1, self.embed2)
+        #self.cross_img = tf.expand_dims(self.cross, 3)
+        self.cross_img = self.match_func(self.embed1, self.embed2, match_type='dot')
+        tf.add_to_collection('explain_input', self.cross_img)
         
         # convolution
+        '''
         self.w1 = tf.get_variable('w1',
             initializer=tf.truncated_normal_initializer(mean=0.0,
                 stddev=0.2, dtype=tf.float32),
@@ -66,6 +68,10 @@ class Model():
         # batch_size * X1_maxlen * X2_maxlen * feat_out
         self.conv1 = tf.nn.relu(tf.nn.conv2d(self.cross_img,
             self.w1, [1, 1, 1, 1], "SAME") + self.b1)
+        '''
+        # batch_size * X1_maxlen * X2_maxlen * feat_out
+        self.conv1 = tf.layers.conv2d(self.cross_img, 8, [2, 10],
+            activation=tf.nn.relu)
 
         # dynamic pooling
         self.conv1_expand = tf.gather_nd(self.conv1, self.dpool_index)
@@ -143,6 +149,30 @@ class Model():
             index.append(dpool_index_(i, len1[i] // compress_ratio1, 
                          len2[i] // compress_ratio2, cur_max_len1, cur_max_len2))
         return np.array(index)
+
+    def match_func(self, x1, x2, match_type='dot', normalize=False):
+        if normalize:
+            x1_norm = tf.norm(x1, axis=-1, keepdims=True)
+            x2_norm = tf.norm(x2, axis=-1, keepdims=True)
+            x1 = x1 / x1_norm
+            x2 = x2 / x2_norm
+        if match_type in ['dot']:
+            output = tf.einsum('abd,acd->abc', x1, x2)
+            output = tf.expand_dims(output, 3)
+        elif match_type in ['mul', 'plus', 'minus']:
+            x1_exp = tf.stack([x1] * tf.shape(x2)[1], 2)
+            x2_exp = tf.stack([x2] * tf.shape(x1)[1], 1)
+            if self.match_type == 'mul':
+                output = x1_exp * x2_exp
+            elif self.match_type == 'plus':
+                output = x1_exp + x2_exp
+            elif self.match_type == 'minus':
+                output = x1_exp - x2_exp
+        elif match_type in ['concat']:
+            x1_exp = tf.stack([x1] * tf.shape(x2)[1], axis=2)
+            x2_exp = tf.stack([x2] * tf.shape(x1)[1], axis=1)
+            output = tf.concat([x1_exp, x2_exp], axis=3)
+        return output
 
     def init_step(self, sess):
         sess.run(tf.global_variables_initializer())

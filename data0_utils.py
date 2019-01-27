@@ -8,27 +8,33 @@ __author__ = 'Liang Pang'
 
 import sys
 import random
+import json
+
 import numpy as np
 
-import json
-config = json.loads( open(sys.argv[1]).read() )
-
-Letor07Path = config['data_dir'] #'/home/pangliang/matching/data/letor/r5w/'
 import pytextnet as pt
 
-word_dict, iword_dict = pt.io.base.read_word_dict(filename=Letor07Path + '/word_dict.txt')
-query_data = pt.io.base.read_data(filename=Letor07Path + '/qid_query.txt')
-doc_data = pt.io.base.read_data(filename=Letor07Path + '/docid_doc.txt')
-embed_dict = pt.io.base.read_embedding(filename=Letor07Path + '/embed_wiki-pdc_d50_norm')
+class DataLoader():
 
-feat_size = 0
+    def __init__(self, config_file):
+        self.config_file = config_file
+        self.config = json.loads( open(config_file).read() )
+        
+        self.Letor07Path = self.config['data_dir'] #'/home/pangliang/matching/data/letor/r5w/'
 
-_PAD_ = len(word_dict)
-embed_dict[_PAD_] = np.zeros((50, ), dtype=np.float32)
-word_dict[_PAD_] = '[PAD]'
-iword_dict['[PAD]'] = _PAD_
-W_init_embed = np.float32(np.random.uniform(-0.02, 0.02, [len(word_dict), 50]))
-embedding = pt.io.base.convert_embed_2_numpy(embed_dict, embed = W_init_embed)
+        self.word_dict, self.iword_dict = pt.io.base.read_word_dict(filename=self.Letor07Path + '/word_dict.txt')
+        self.query_data = pt.io.base.read_data(filename=self.Letor07Path + '/qid_query.txt')
+        self.doc_data = pt.io.base.read_data(filename=self.Letor07Path + '/docid_doc.txt')
+        self.embed_dict = pt.io.base.read_embedding(filename=self.Letor07Path + '/embed_wiki-pdc_d50_norm')
+        
+        self.feat_size = self.config['feat_size']
+        
+        self._PAD_ = len(self.word_dict)
+        self.embed_dict[self._PAD_] = np.zeros((50, ), dtype=np.float32)
+        self.word_dict[self._PAD_] = '[PAD]'
+        self.iword_dict['[PAD]'] = self._PAD_
+        self.W_init_embed = np.float32(np.random.uniform(-0.02, 0.02, [len(self.word_dict), 50]))
+        self.embedding = pt.io.base.convert_embed_2_numpy(self.embed_dict, embed = self.W_init_embed)
 
 class PairGenerator():
     def __init__(self, rel_file, config):
@@ -62,7 +68,7 @@ class PairGenerator():
         X2 = np.zeros((config['batch_size']*2, config['data2_maxlen']), dtype=np.int32)
         X2_len = np.zeros((config['batch_size']*2,), dtype=np.int32)
         Y = np.zeros((config['batch_size']*2,), dtype=np.int32)
-        F = np.zeros((config['batch_size']*2, feat_size), dtype=np.float32)
+        F = np.zeros((config['batch_size']*2, config['feat_size']), dtype=np.float32)
 
         Y[::2] = 1
         X1[:] = config['fill_word']
@@ -106,7 +112,7 @@ class ListGenerator():
             X2 = np.zeros((len(d2_list), config['data2_maxlen']), dtype=np.int32)
             X2_len = np.zeros((len(d2_list),), dtype=np.int32)
             Y = np.zeros((len(d2_list),), dtype= np.int32)
-            F = np.zeros((len(d2_list), feat_size), dtype=np.float32)
+            F = np.zeros((len(d2_list), config['feat_size']), dtype=np.float32)
             X1[:] = config['fill_word']
             X2[:] = config['fill_word']
             d1_len = min(config['data1_maxlen'], len(data1[d1]))

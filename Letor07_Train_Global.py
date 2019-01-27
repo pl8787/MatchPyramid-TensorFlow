@@ -12,16 +12,20 @@ import sys
 sys.path.insert(0, 'model/')
 
 import json
-config = json.loads( open(sys.argv[1]).read() )
 
-import data0_utils as du
+from data0_utils import *
+
+config_file = sys.argv[1]
+config = json.loads( open(config_file).read() )
+
 Letor07Path = config['data_dir'] 
 
+du = DataLoader(config_file)
 config['fill_word'] = du._PAD_
 config['embedding'] = du.embedding
 config['feat_size'] = du.feat_size
 
-pair_gen = du.PairGenerator(rel_file=Letor07Path + '/relation.train.fold%d.txt'%(config['fold']), config=config)
+pair_gen = PairGenerator(rel_file=Letor07Path + '/relation.train.fold%d.txt'%(config['fold']), config=config)
 
 from importlib import import_module
 mo = import_module(config['model_file'])
@@ -66,7 +70,7 @@ for i in range(config['train_iters']):
     if (i+1) % 200 == 0:
         print('')
         model.saver.save(sess, 'checkpoint/%s.ckpt'%(config['model_tag']), global_step=i, write_meta_graph=False)
-        list_gen = du.ListGenerator(rel_file=Letor07Path + '/relation.test.fold%d.txt'%(config['fold']), config=config)
+        list_gen = ListGenerator(rel_file=Letor07Path + '/relation.test.fold%d.txt'%(config['fold']), config=config)
         map_v = 0.0
         map_c = 0.0
         for X1, X1_len, X2, X2_len, Y, F in list_gen.get_batch(data1=du.query_data, data2=du.doc_data):
